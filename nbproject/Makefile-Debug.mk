@@ -38,6 +38,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/Connection.o \
 	${OBJECTDIR}/DemoServer.o \
 	${OBJECTDIR}/IOHandler.o \
+	${OBJECTDIR}/Processor.o \
+	${OBJECTDIR}/Protocol.o \
 	${OBJECTDIR}/Server.o
 
 
@@ -68,22 +70,32 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/nonblockingserver: ${OBJECTFILES}
 ${OBJECTDIR}/Connection.o: Connection.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g `pkg-config --cflags libevent`   -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Connection.o Connection.cpp
+	$(COMPILE.cc) -g `pkg-config --cflags libevent` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Connection.o Connection.cpp
 
 ${OBJECTDIR}/DemoServer.o: DemoServer.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g `pkg-config --cflags libevent`   -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DemoServer.o DemoServer.cpp
+	$(COMPILE.cc) -g `pkg-config --cflags libevent` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DemoServer.o DemoServer.cpp
 
 ${OBJECTDIR}/IOHandler.o: IOHandler.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g `pkg-config --cflags libevent`   -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/IOHandler.o IOHandler.cpp
+	$(COMPILE.cc) -g `pkg-config --cflags libevent` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/IOHandler.o IOHandler.cpp
+
+${OBJECTDIR}/Processor.o: Processor.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g `pkg-config --cflags libevent` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Processor.o Processor.cpp
+
+${OBJECTDIR}/Protocol.o: Protocol.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g `pkg-config --cflags libevent` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Protocol.o Protocol.cpp
 
 ${OBJECTDIR}/Server.o: Server.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g `pkg-config --cflags libevent`   -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Server.o Server.cpp
+	$(COMPILE.cc) -g `pkg-config --cflags libevent` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Server.o Server.cpp
 
 # Subprojects
 .build-subprojects:

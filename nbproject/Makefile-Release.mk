@@ -38,6 +38,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/Connection.o \
 	${OBJECTDIR}/DemoServer.o \
 	${OBJECTDIR}/IOHandler.o \
+	${OBJECTDIR}/Processor.o \
+	${OBJECTDIR}/Protocol.o \
 	${OBJECTDIR}/Server.o
 
 
@@ -79,6 +81,16 @@ ${OBJECTDIR}/IOHandler.o: IOHandler.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/IOHandler.o IOHandler.cpp
+
+${OBJECTDIR}/Processor.o: Processor.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Processor.o Processor.cpp
+
+${OBJECTDIR}/Protocol.o: Protocol.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Protocol.o Protocol.cpp
 
 ${OBJECTDIR}/Server.o: Server.cpp 
 	${MKDIR} -p ${OBJECTDIR}

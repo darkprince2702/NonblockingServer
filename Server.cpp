@@ -13,14 +13,15 @@
 
 #include "NonblockingServer.h"
 
-
 Server::Server(int port) {
     port_ = port;
+    serverSocket_ = NULL;
+    ioHandler_ = NULL;
 }
 
 void Server::createAndListenSocket() {
     int fd, error;
-    char port[sizeof("65536") +1];
+    char port[sizeof ("65536") + 1];
     struct addrinfo hints, *res, *res0;
     // Initialize hints to getaddrinfo
     memset(&hints, 0, sizeof hints);
@@ -63,6 +64,7 @@ void Server::createAndListenSocket() {
         std::cout << "listen() error\n";
         return;
     }
+    std::cout << "Server listening on port " << port_ << std::endl;
     // Done job, return
     serverSocket_ = fd;
 }
@@ -85,23 +87,26 @@ void Server::stop() {
 void Server::listenHandler(int fd, short what) {
     struct sockaddr_storage addrStorage;
     socklen_t addrLen = sizeof addrStorage;
-    while (accept(fd, (sockaddr*) & addrStorage, &addrLen) != -1) {
-        // Set socket fd to nonblock
-        int flags;
-        if ((flags = fcntl(fd, F_GETFL)) < 0 || ((fcntl(fd, F_SETFD, flags | O_NONBLOCK) < 0))) {
-            std::cout << "fcntl() NONBLOCK error\n";
-            return;
-        }
-        
-        Connection* clientConnection = createConnection(fd);
-        
-        if (clientConnection == NULL) {
-            std::cout << "createConnection() error\n";
-            return;
-        }
-        
-        clientConnection->transition();
+    int clientSocket = 0;
+    if ((clientSocket = accept(fd, (sockaddr*) & addrStorage, &addrLen)) == -1) {
+        std::cout << "accept() error\n";
     }
+    // Set socket fd to nonblock
+    int flags;
+    if ((flags = fcntl(clientSocket, F_GETFL)) < 0 || 
+            ((fcntl(clientSocket, F_SETFD, flags | O_NONBLOCK) < 0))) {
+        std::cout << "fcntl() NONBLOCK error\n";
+        return;
+    }
+
+    Connection* clientConnection = createConnection(clientSocket);
+
+    if (clientConnection == NULL) {
+        std::cout << "createConnection() error\n";
+        return;
+    }
+
+    clientConnection->transition();
 }
 
 IOHandler* Server::getIOHandler() {
@@ -109,6 +114,7 @@ IOHandler* Server::getIOHandler() {
 }
 
 Connection* Server::createConnection(int fd) {
+    std::lock_guard<std::mutex> guard(mutex);
     Connection* conn = NULL;
     if (stackConnections_.empty()) {
         conn = new Connection(this, fd);
@@ -117,20 +123,21 @@ Connection* Server::createConnection(int fd) {
         stackConnections_.pop();
         conn->init(fd);
     }
-    
+
     if (conn == NULL) {
         std::cout << "createConnection() error\n";
     } else {
         activeConnections_.push_back(conn);
     }
-    
+
     return conn;
 }
 
 void Server::closeConnection(Connection* conn) {
+    std::lock_guard<std::mutex> guard(mutex);
     if (conn) {
-        activeConnections_.erase(std::remove(activeConnections_.begin(), 
+        activeConnections_.erase(std::remove(activeConnections_.begin(),
                 activeConnections_.end(), conn), activeConnections_.end());
         stackConnections_.push(conn);
-    } 
+    }
 }

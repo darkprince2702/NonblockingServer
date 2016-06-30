@@ -13,18 +13,19 @@
 
 #include "NonblockingServer.h"
 
-
 IOHandler::IOHandler(Server* server, int serverSocket) {
     server_ = server;
     listenSocket_ = serverSocket;
+    eventBase_ = NULL;
+    notificationEvent_ = NULL;
 }
 
 void IOHandler::registerEvents() {
     // Initialize event base
     eventBase_ = event_base_new();
-    
+
     if (listenSocket_ >= 0) {
-        listenEvent_ = event_new(eventBase_, listenSocket_, EV_READ|EV_PERSIST, 
+        listenEvent_ = event_new(eventBase_, listenSocket_, EV_READ | EV_PERSIST,
                 IOHandler::listenCallback, server_);
         event_add(listenEvent_, 0);
     } else {
@@ -36,12 +37,11 @@ void IOHandler::listenCallback(evutil_socket_t fd, short what, void *arg) {
     ((Server*) arg)->listenHandler(fd, what);
 }
 
-
 void IOHandler::run() {
     if (eventBase_ == NULL) {
         registerEvents();
     }
-    
+    std::cout << "IOHandler entering loop...\n";
     event_base_loop(eventBase_, 0);
 }
 

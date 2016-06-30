@@ -23,6 +23,8 @@
 #include <event2/event.h>
 #include <event2/event_compat.h>
 
+#include "NonblockingServer.h"
+
 #define PORT "5050"
 
 /*
@@ -103,7 +105,7 @@ int setFDNonblock(int fd) {
     return 0;
 }
 
-int main(int argc, char** argv) {
+int main_(int argc, char** argv) {
     int socketFD, acceptFD, status;
     struct addrinfo hints, *res, *p;
     struct sockaddr_storage clientAddress;
@@ -159,3 +161,7 @@ int main(int argc, char** argv) {
     return 0;
 }
 
+int main(int argc, char** argv) {
+    Server* server = new Server(5050);
+    server->serve();
+}
