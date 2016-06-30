@@ -52,7 +52,7 @@ void Connection::transition() {
                     throw std::bad_alloc();
                 }
                 readBuffer_ = newBuffer;
-                */
+                 */
                 delete readBuffer_;
                 readBuffer_ = new u_int8_t[messageSize_];
                 readBufferSize_ = messageSize_;
