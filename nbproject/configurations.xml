@@ -6,6 +6,7 @@
                    projectFiles="true">
       <itemPath>Connection.h</itemPath>
       <itemPath>IOHandler.h</itemPath>
+      <itemPath>NonblockingServer.h</itemPath>
       <itemPath>Server.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
@@ -58,6 +59,8 @@
       </item>
       <item path="IOHandler.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="NonblockingServer.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="Server.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Server.h" ex="false" tool="3" flavor2="0">
@@ -92,6 +95,8 @@
       <item path="IOHandler.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="IOHandler.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="NonblockingServer.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Server.cpp" ex="false" tool="1" flavor2="0">
       </item>

@@ -10,11 +10,13 @@
  *
  * Created on June 29, 2016, 2:04 PM
  */
-
+/*
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-#include "IOHandler.h"
+#include <event.h>
+#include <event2/event_struct.h>
+#include <event2/event_compat.h>
 
 enum SocketState {
     SOCKET_RECV,
@@ -30,7 +32,6 @@ enum ConnectionState {
 };
 
 namespace server {
-
     class Connection {
     public:
         Connection(Server* server, int socket);

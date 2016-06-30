@@ -10,7 +10,7 @@
  *
  * Created on June 27, 2016, 3:20 PM
  */
-
+/*
 #ifndef SERVER_H
 #define SERVER_H
 
@@ -18,22 +18,21 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <iostream>
+#include <algorithm>
 #include <vector>
 #include <stack>
-#include "IOHandler.h"
-#include "Connection.h"
+#include <event.h>
 
-namespace server {
-    using namespace server;
-    
+namespace server {    
     class Server {
     public:
+        Server();
         Server(int port);
         void createAndListenSocket();
         void serve();
         void stop();
         void listenHandler(evutil_socket_t fd, short what);
-        IOHandler *getIOHandler();
+        IOHandler* getIOHandler();
     private:
         static const int BACKLOG = 100;
         static const int STACK_SIZE = 100;

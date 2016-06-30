@@ -11,15 +11,22 @@
  * Created on June 29, 2016, 11:08 AM
  */
 
+/*
 #ifndef IOHANDLER_H
 #define IOHANDLER_H
 
+#include <string.h>
+#include <netdb.h>
+#include <fcntl.h>
+#include <iostream>
+#include <algorithm>
+#include <vector>
+#include <stack>
 #include <event.h>
 #include <event2/event_compat.h>
 #include <event2/event_struct.h>
 #include <Poco/Runnable.h>
 #include <iostream>
-#include "Server.h"
 
 namespace server {
 
@@ -28,16 +35,15 @@ namespace server {
         IOHandler();
         IOHandler(Server* server, int serverSocket);
         void registerEvents();
-        void listenCallback(evutil_socket_t fd, short what, void *arg);
+        static void listenCallback(evutil_socket_t fd, short what, void *arg);
         void run();
         event_base* getEventBase();
     private:
-        Server server_;
+        Server* server_;
         event_base* eventBase_;
         event* listenEvent_;
         event* notificationEvent_;
         int listenSocket_;
     };
 }
-#endif /* IOTHREAD_H */
-
+#endif /* IOHANDLER_H */

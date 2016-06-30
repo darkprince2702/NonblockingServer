@@ -11,11 +11,8 @@
  * Created on June 27, 2016, 3:20 PM
  */
 
-#include <vector>
+#include "NonblockingServer.h"
 
-#include "Server.h"
-
-using namespace server;
 
 Server::Server(int port) {
     port_ = port;
@@ -23,15 +20,15 @@ Server::Server(int port) {
 
 void Server::createAndListenSocket() {
     int fd, error;
-
+    char port[sizeof("65536") +1];
     struct addrinfo hints, *res, *res0;
     // Initialize hints to getaddrinfo
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
-
-    if (error = getaddrinfo(NULL, port_, &hints, &res0)) {
+    sprintf(port, "%d", port_);
+    if ((error = getaddrinfo(NULL, port, &hints, &res0))) {
         std::cout << "getaddrinfo() error\n";
         return;
     }
@@ -88,7 +85,7 @@ void Server::stop() {
 void Server::listenHandler(int fd, short what) {
     struct sockaddr_storage addrStorage;
     socklen_t addrLen = sizeof addrStorage;
-    while (accept(fd, (sockaddr*) & addrStorage, addrLen) != -1) {
+    while (accept(fd, (sockaddr*) & addrStorage, &addrLen) != -1) {
         // Set socket fd to nonblock
         int flags;
         if ((flags = fcntl(fd, F_GETFL)) < 0 || ((fcntl(fd, F_SETFD, flags | O_NONBLOCK) < 0))) {
@@ -96,7 +93,7 @@ void Server::listenHandler(int fd, short what) {
             return;
         }
         
-        Connection clientConnection = createConnection(fd);
+        Connection* clientConnection = createConnection(fd);
         
         if (clientConnection == NULL) {
             std::cout << "createConnection() error\n";

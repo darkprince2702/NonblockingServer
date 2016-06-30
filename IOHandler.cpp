@@ -11,9 +11,8 @@
  * Created on June 29, 2016, 11:08 AM
  */
 
-#include "IOHandler.h"
+#include "NonblockingServer.h"
 
-using namespace server;
 
 IOHandler::IOHandler(Server* server, int serverSocket) {
     server_ = server;
@@ -25,7 +24,8 @@ void IOHandler::registerEvents() {
     eventBase_ = event_base_new();
     
     if (listenSocket_ >= 0) {
-        listenEvent_ = event_new(eventBase_, listenSocket_, EV_READ|EV_PERSIST, listenCallback);
+        listenEvent_ = event_new(eventBase_, listenSocket_, EV_READ|EV_PERSIST, 
+                IOHandler::listenCallback, server_);
         event_add(listenEvent_, 0);
     } else {
         std::cout << "registerEvent error\n";
@@ -33,7 +33,7 @@ void IOHandler::registerEvents() {
 }
 
 void IOHandler::listenCallback(evutil_socket_t fd, short what, void *arg) {
-    server_->listenHandler();
+    ((Server*) arg)->listenHandler(fd, what);
 }
 
 
