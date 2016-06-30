@@ -161,7 +161,7 @@ void Connection::workHandler(int fd, short what) {
             fetch = read(fd, &framing.buf[readBufferPos_],
                     (size_t) uint32_t(sizeof (framing.size) - readBufferPos_));
             if (fetch == 0) {
-                std::cout << "Connection close, workHandler() error\n";
+                std::cout << "Connection close\n";
                 server_->closeConnection(this);
                 return;
             }
@@ -222,4 +222,9 @@ void Connection::setwriteBufferSize(int size) {
 
 uint32_t Connection::getMessageSize() {
     return messageSize_;
+}
+
+void Connection::closeConnection() {
+    event_del(&event_);
+    close(connectionSocket_);
 }

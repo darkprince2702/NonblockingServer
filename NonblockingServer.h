@@ -109,6 +109,7 @@ class Connection {
 public:
     Connection(Server* server, int socket);
     void init(int socket);
+    void closeConnection();
     static void workCallback(evutil_socket_t fd, short what, void *arg);
     void workHandler(evutil_socket_t fd, short what);
     void transition();

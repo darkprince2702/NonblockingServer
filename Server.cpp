@@ -139,5 +139,6 @@ void Server::closeConnection(Connection* conn) {
         activeConnections_.erase(std::remove(activeConnections_.begin(),
                 activeConnections_.end(), conn), activeConnections_.end());
         stackConnections_.push(conn);
+        conn->closeConnection();
     }
 }
