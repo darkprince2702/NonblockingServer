@@ -54,7 +54,8 @@ void Connection::transition() {
                 readBuffer_ = newBuffer;
                  */
                 delete readBuffer_;
-                readBuffer_ = new u_int8_t[messageSize_];
+                uint8_t* newBuffer = new uint8_t[messageSize_];
+                readBuffer_ = newBuffer;
                 readBufferSize_ = messageSize_;
             }
 
@@ -66,10 +67,10 @@ void Connection::transition() {
             return;
 
         case CONN_RECV:
-            // Received message, give task to threadpool for processing
+            // Received message, give task to threadpool for processin
             processor_->proccess();
             connectionState_ = CONN_WAIT;
-            transition();
+            notifyIOHanlder();
             return;
 
         case CONN_WAIT:
@@ -77,11 +78,6 @@ void Connection::transition() {
                 // Move into write state
                 writeBufferPos_ = 0;
                 socketState_ = SOCKET_SEND;
-
-                // Put the frame size into the write buffer
-                int32_t frameSize = (int32_t) htonl(writeBufferSize_ - 4);
-                memcpy(writeBuffer_, &frameSize, 4);
-
                 // Socket into write mode
                 connectionState_ = CONN_SEND;
                 setWrite();
@@ -194,7 +190,7 @@ void Connection::workHandler(int fd, short what) {
                 return;
             }
             left = writeBufferSize_ - writeBufferPos_;
-            sent = write(fd, readBuffer_ + writeBufferPos_, left);
+            sent = write(fd, writeBuffer_ + writeBufferPos_, left);
             writeBufferPos_ += sent;
             if (writeBufferPos_ == writeBufferSize_) {
                 transition();
@@ -207,17 +203,16 @@ void Connection::workHandler(int fd, short what) {
     }
 }
 
-char* Connection::getReadBuffer() {
-    char* result = reinterpret_cast<char*> (readBuffer_);
-    return result;
+uint8_t* Connection::getReadBuffer() {
+    return readBuffer_;
 }
 
-void Connection::setwriteBuffer(char* content) {
-    writeBuffer_ = (uint8_t*) content;
+void Connection::setwriteBuffer(uint8_t* content) {
+    writeBuffer_ = content;
 }
 
-void Connection::setwriteBufferSize(int size) {
-    writeBufferSize_ = (uint32_t) size;
+void Connection::setwriteBufferSize(uint32_t size) {
+    writeBufferSize_ = size;
 }
 
 uint32_t Connection::getMessageSize() {
@@ -227,4 +222,8 @@ uint32_t Connection::getMessageSize() {
 void Connection::closeConnection() {
     event_del(&event_);
     close(connectionSocket_);
+}
+
+void Connection::notifyIOHanlder() {
+    ioHandler_->notify(this);
 }

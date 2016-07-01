@@ -27,6 +27,7 @@
 #include <stack>
 #include <mutex>
 #include <assert.h>
+#include <memory>
 #include <boost/shared_ptr.hpp>
 #include <event.h>
 #include <event2/event_compat.h>
@@ -50,6 +51,11 @@ enum ConnectionState {
 
 union Framing {
     uint8_t buf[sizeof (uint32_t)];
+    uint32_t size;
+};
+
+struct Message {
+    uint8_t* content;
     uint32_t size;
 };
 
@@ -85,15 +91,22 @@ public:
     IOHandler();
     IOHandler(Server* server, int serverSocket);
     void registerEvents();
-    static void listenCallback(evutil_socket_t fd, short what, void *arg);
+    static void listenCallback(evutil_socket_t fd, short what, void *v);
+    bool notify(Connection* conn);
+    static void notificationHandler(evutil_socket_t fd, short what, void *v);
     void run();
+    void stop();
     event_base* getEventBase();
+    int getNotificationSendFD();
+    int getNotificationRecvFD();
 private:
     Server* server_;
     event_base* eventBase_;
     event* listenEvent_;
     event* notificationEvent_;
     int listenSocket_;
+    int notificationPipeFDs_[2];
+    void createNotificationPipe();
 };
 
 class Processor {
@@ -102,7 +115,7 @@ public:
     void proccess();
 private:
     Connection* connection_;
-    boost::shared_ptr<Protocol> protocol_;
+    Protocol* protocol_;
 };
 
 class Connection {
@@ -113,10 +126,12 @@ public:
     static void workCallback(evutil_socket_t fd, short what, void *arg);
     void workHandler(evutil_socket_t fd, short what);
     void transition();
-    char* getReadBuffer();
+    uint8_t* getReadBuffer();
     uint32_t getMessageSize();
-    void setwriteBuffer(char* content);
-    void setwriteBufferSize(int size);
+    void setwriteBuffer(uint8_t* content);
+    void setwriteBufferSize(uint32_t size);
+    void getProcessor();
+    void notifyIOHanlder();
 private:
     int connectionSocket_;
     IOHandler* ioHandler_;
@@ -141,9 +156,13 @@ private:
 
 class Protocol {
 public:
-    std::string processInput(char* inMessage);
-    char* processOutput(std::string outMessage);
+    std::string processInput(const Message* inMessage);
+    Message* processOutput(std::string outMessage);
 };
 
 #endif /* NONBLOCKINGSERVER_H */
 
+class ThreadManager : Poco::Runnable {
+public:
+    void run();
+};

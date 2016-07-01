@@ -7,23 +7,21 @@
 #include "NonblockingServer.h"
 
 
-Processor::Processor(Connection* connection) : protocol_(new Protocol) {
+Processor::Processor(Connection* connection) {
     connection_ = connection;
+    protocol_ = new Protocol();
 }
 
 void Processor::proccess() {
-    std::string readContent = protocol_->processInput(connection_->getReadBuffer());
-    if (readContent.empty()) {
-        std::cout << "process() error\n";
-        return;
-    } else {
-        // Cut all garbage from content;
-        readContent = readContent.substr(0, connection_->getMessageSize());
-    }
-    char* writeContent = protocol_->processOutput(readContent);
-    if (writeContent == NULL) {
-        std::cout << "process() error\n";
-    }
-    connection_->setwriteBuffer(writeContent);
-    connection_->setwriteBufferSize(sizeof(writeContent));
+    Message inMessage;
+    inMessage.content = connection_->getReadBuffer();
+    inMessage.size = connection_->getMessageSize();
+    
+    std::string input = protocol_->processInput(&inMessage);
+    // TODO: process the input
+    std::string output = input;    // dummy processor
+    
+    Message* outMessage = protocol_->processOutput(output);
+    connection_->setwriteBuffer(outMessage->content);
+    connection_->setwriteBufferSize(outMessage->size);
 }

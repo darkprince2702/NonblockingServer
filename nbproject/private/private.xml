@@ -12,6 +12,8 @@
             <file>file:/data/NonblockingServer/Connection.cpp</file>
             <file>file:/data/NonblockingServer/IOHandler.cpp</file>
             <file>file:/data/NonblockingServer/NonblockingServer.h</file>
+            <file>file:/data/NonblockingServer/Protocol.cpp</file>
+            <file>file:/data/NonblockingServer/Processor.cpp</file>
         </group>
     </open-files>
 </project-private>
