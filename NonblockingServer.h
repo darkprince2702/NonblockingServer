@@ -25,14 +25,18 @@
 #include <algorithm>
 #include <vector>
 #include <stack>
+#include <queue>
 #include <mutex>
 #include <assert.h>
 #include <memory>
+#include <unordered_map>
 #include <boost/shared_ptr.hpp>
 #include <event.h>
 #include <event2/event_compat.h>
 #include <event2/event_struct.h>
 #include <Poco/Runnable.h>
+#include <Poco/Thread.h>
+#include "json.hpp"
 
 enum SocketState {
     SOCKET_RECV_FRAMING,
@@ -59,10 +63,26 @@ struct Message {
     uint32_t size;
 };
 
+struct Operator {
+    std::string type;
+    std::string key;
+    std::string value;
+    std::string result;
+    Operator() {
+        type = NULL;
+        key = NULL;
+        value = NULL;
+        result = NULL;
+    }
+};
+
 class IOHandler;
 class Connection;
 class Processor;
 class Protocol;
+class Handler;
+class Task;
+class ThreadManager;
 
 class Server {
 public:
@@ -73,6 +93,8 @@ public:
     void stop();
     void listenHandler(evutil_socket_t fd, short what);
     IOHandler* getIOHandler();
+    ThreadManager* getThreadManager();
+    void setWorkerNum(int workerNum);
     void closeConnection(Connection* conn);
 private:
     static const int BACKLOG = 100;
@@ -80,6 +102,8 @@ private:
     int port_;
     int serverSocket_;
     IOHandler *ioHandler_;
+    ThreadManager* threadManager_;
+    int workerNum_;
     std::stack<Connection*> stackConnections_;
     std::vector<Connection*> activeConnections_;
     std::mutex mutex;
@@ -116,6 +140,7 @@ public:
 private:
     Connection* connection_;
     Protocol* protocol_;
+    Handler* handler_;
 };
 
 class Connection {
@@ -130,8 +155,11 @@ public:
     uint32_t getMessageSize();
     void setwriteBuffer(uint8_t* content);
     void setwriteBufferSize(uint32_t size);
-    void getProcessor();
+    void setConnectionState(ConnectionState cs);
+    Processor* getProcessor();
     void notifyIOHanlder();
+    bool notifyThreadManager(Task* task);
+    ThreadManager* getThreadManager();
 private:
     int connectionSocket_;
     IOHandler* ioHandler_;
@@ -156,13 +184,56 @@ private:
 
 class Protocol {
 public:
-    std::string processInput(const Message* inMessage);
-    Message* processOutput(std::string outMessage);
+    Operator* processInput(const Message* inMessage);
+    Message* processOutput(Operator* result);
 };
 
 #endif /* NONBLOCKINGSERVER_H */
 
-class ThreadManager : Poco::Runnable {
+class Task : public Poco::Runnable {
 public:
-    void run();
+    Task(Connection* conn);
+    void run() override;
+    bool notify();
+    void setThreadID(int ID);
+    int getThreadID();
+private:
+    Connection* connection_;
+    int threadID_;
+};
+
+class ThreadManager : public Poco::Runnable {
+public:
+    ThreadManager(int workerNum);
+    void run() override;
+    static void workerCallback(evutil_socket_t fd, short what, void *v);
+    static void taskCallback(evutil_socket_t fd, short what, void *v);
+    void createNotificationPipes();
+    int getWorkerNotificationSendFD();
+    int getWorkerNotificationRecvFD();
+    int getTaskNotificationSendFD();
+    int getTaskNotificationRecvFD();
+    void eventHanlder();
+    void registerEvents();
+    Poco::Thread* getThread(int threadID);
+    void addIdleThread(int threadID);
+private:
+    event* workEvent_;
+    event* taskEvent_;
+    event_base* eventBase_;
+    int workerNotificationPipeFDs_[2];
+    int taskNotificationPipeFDs_[2];
+    std::queue<Task*> taskQueue_;
+    Poco::Thread* threads_;
+    std::vector<int> idleThreadIDs_;
+};
+
+class Handler {
+public:
+    static Handler* getInstance();
+    bool set(std::string key, std::string value);
+    std::string get(std::string key);
+    std::string remove(std::string key);
+private:
+    std::unordered_map<std::string, std::string> data;
 };

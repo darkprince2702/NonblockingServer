@@ -10,6 +10,7 @@
 Processor::Processor(Connection* connection) {
     connection_ = connection;
     protocol_ = new Protocol();
+    handler_ = Handler::getInstance();
 }
 
 void Processor::proccess() {
@@ -17,11 +18,20 @@ void Processor::proccess() {
     inMessage.content = connection_->getReadBuffer();
     inMessage.size = connection_->getMessageSize();
     
-    std::string input = protocol_->processInput(&inMessage);
-    // TODO: process the input
-    std::string output = input;    // dummy processor
+    Operator* object = protocol_->processInput(&inMessage);
+    switch (object->type) {
+        case "set":
+            object->result = std::string(handler_->set(object->key, object->value));
+            return;
+        case "get":
+            object->result = std::string(handler_->get(object->key));
+            return;
+        case "remove":
+            object->result = std::string(handler_->remove(object->key));
+            return;
+    }
     
-    Message* outMessage = protocol_->processOutput(output);
+    Message* outMessage = protocol_->processOutput(object);
     connection_->setwriteBuffer(outMessage->content);
     connection_->setwriteBufferSize(outMessage->size);
 }

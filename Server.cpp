@@ -15,8 +15,9 @@
 
 Server::Server(int port) {
     port_ = port;
-    serverSocket_ = NULL;
+    serverSocket_ = 0;
     ioHandler_ = NULL;
+    threadManager_ = NULL;
 }
 
 void Server::createAndListenSocket() {
@@ -73,9 +74,13 @@ void Server::serve() {
     if (!serverSocket_) {
         createAndListenSocket();
     }
+    threadManager_ = new ThreadManager(workerNum_);
+    Poco::Thread threadManagerThread;
+    threadManagerThread.start(*threadManager_);
     // Initialize io handler and run it
     ioHandler_ = new IOHandler(this, serverSocket_);
     ioHandler_->run();
+    // Initialize thread manager and run it
     // Wait for ioHandler finish
     // ioHandler_->join();
 }
@@ -111,6 +116,14 @@ void Server::listenHandler(int fd, short what) {
 
 IOHandler* Server::getIOHandler() {
     return ioHandler_;
+}
+
+ThreadManager* Server::getThreadManager() {
+    return threadManager_;
+}
+
+void Server::setWorkerNum(int workerNum) {
+    workerNum_ = workerNum;
 }
 
 Connection* Server::createConnection(int fd) {

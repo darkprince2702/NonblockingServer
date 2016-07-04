@@ -6,13 +6,38 @@
 
 #include "NonblockingServer.h"
 
-std::string Protocol::processInput(const Message* inMessage) {
+Operator* Protocol::processInput(const Message* inMessage) {
     // Cast from uint8_t array to string
     std::string output(reinterpret_cast<char*>(inMessage->content));
-    return output;
+    nlohmann::json o = nlohmann::json::parse(output);
+    Operator* result = new Operator();
+    if (o.count("type")) {
+        result.type = o["type"];
+    }
+    if (o.count("key")) {
+        result.type = o["key"];
+    }
+    if (o.count("value")) {
+        result.type = o["value"];
+    }
+    return result;
 }
 
-Message* Protocol::processOutput(std::string outMessage) {
+Message* Protocol::processOutput(Operator* result) {
+    nlohmann::json o;
+    if (result->type != NULL) {
+        o["type"] = result->type;
+    } 
+    if (result->key != NULL) {
+        o["key"] = result->key;
+    } 
+    if (result->value != NULL) {
+        o["value"] = result->value;
+    } 
+    if (result->result != NULL) {
+        o["result"] = result->result;
+    }
+    std::string outMessage = o.dump();
     // Get size of send message (+1 for \0)
     uint32_t outputSize = (uint32_t) outMessage.size() + 1;
     // Convert from string to uint8_t, TODO: simplify

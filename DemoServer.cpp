@@ -163,5 +163,6 @@ int main_(int argc, char** argv) {
 
 int main(int argc, char** argv) {
     Server* server = new Server(5050);
+    server->setWorkerNum(4);
     server->serve();
 }

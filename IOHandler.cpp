@@ -31,11 +31,11 @@ void IOHandler::registerEvents() {
     } else {
         std::cout << "registerEvent error\n";
     }
-    
+
     createNotificationPipe();
-    
-    
-    notificationEvent_ = event_new(eventBase_, getNotificationRecvFD(), 
+
+
+    notificationEvent_ = event_new(eventBase_, getNotificationRecvFD(),
             EV_READ | EV_PERSIST, IOHandler::notificationHandler, this);
     if (event_add(notificationEvent_, 0) == -1) {
         std::cout << "registerEvent error\n";

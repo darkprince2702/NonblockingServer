@@ -40,7 +40,9 @@ OBJECTFILES= \
 	${OBJECTDIR}/IOHandler.o \
 	${OBJECTDIR}/Processor.o \
 	${OBJECTDIR}/Protocol.o \
-	${OBJECTDIR}/Server.o
+	${OBJECTDIR}/Server.o \
+	${OBJECTDIR}/Task.o \
+	${OBJECTDIR}/ThreadManager.o
 
 
 # C Compiler Flags
@@ -96,6 +98,16 @@ ${OBJECTDIR}/Server.o: Server.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Server.o Server.cpp
+
+${OBJECTDIR}/Task.o: Task.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Task.o Task.cpp
+
+${OBJECTDIR}/ThreadManager.o: ThreadManager.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ThreadManager.o ThreadManager.cpp
 
 # Subprojects
 .build-subprojects:

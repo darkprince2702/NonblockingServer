@@ -68,9 +68,10 @@ void Connection::transition() {
 
         case CONN_RECV:
             // Received message, give task to threadpool for processin
-            processor_->proccess();
-            connectionState_ = CONN_WAIT;
-            notifyIOHanlder();
+//            processor_->proccess();
+//            connectionState_ = CONN_WAIT;
+//            notifyIOHanlder(); 
+            notifyThreadManager(new Task(this));
             return;
 
         case CONN_WAIT:
@@ -226,4 +227,64 @@ void Connection::closeConnection() {
 
 void Connection::notifyIOHanlder() {
     ioHandler_->notify(this);
+}
+
+Processor* Connection::getProcessor() {
+    return processor_;
+}
+
+ThreadManager* Connection::getThreadManager() {
+    return server_->getThreadManager();
+}
+
+void Connection::setConnectionState(ConnectionState cs) {
+    connectionState_ = cs;
+}
+
+
+bool Connection::notifyThreadManager(Task* task) {
+    int fd = getThreadManager()->getTaskNotificationSendFD();
+    if (fd < 0) {
+        return false;
+    }
+    
+    fd_set wfds, efds;
+    int ret = -1;
+    int kSize = sizeof (task);
+    const char* pos = (const char*) reinterpret_cast<void*> (&task);
+
+    while (kSize > 0) {
+        FD_ZERO(&wfds);
+        FD_ZERO(&efds);
+        FD_SET(fd, &wfds);
+        FD_SET(fd, &efds);
+        ret = select(fd + 1, NULL, &wfds, &efds, NULL);
+        if (ret < 0) {
+            return false;
+        } else if (ret == 0) {
+            continue;
+        }
+
+        if (FD_ISSET(fd, &efds)) {
+            close(fd);
+            return false;
+        }
+
+        if (FD_ISSET(fd, &wfds)) {
+            ret = send(fd, pos, kSize, 0);
+            if (ret < 0) {
+                if (errno == EAGAIN) {
+                    continue;
+                }
+
+                close(fd);
+                return false;
+            }
+
+            kSize -= ret;
+            pos += ret;
+        }
+    }
+    
+    return true;
 }
