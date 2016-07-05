@@ -13,11 +13,13 @@
 
 #include "NonblockingServer.h"
 
-Server::Server(int port) {
+Server::Server(int port, int ioHandlerNum, int workerNum) {
     port_ = port;
     serverSocket_ = 0;
-    ioHandler_ = NULL;
     threadManager_ = NULL;
+    eventBase_ = NULL;
+    ioHandlerNum_ = ioHandlerNum;
+    workerNum_ = workerNum;
 }
 
 void Server::createAndListenSocket() {
@@ -78,8 +80,17 @@ void Server::serve() {
     Poco::Thread threadManagerThread;
     threadManagerThread.start(*threadManager_);
     // Initialize io handler and run it
-    ioHandler_ = new IOHandler(this, serverSocket_);
-    ioHandler_->run();
+    for (int i = 0; i < ioHandlerNum_; i++) {
+        int listenFD = (i == 0 ? serverSocket_ : 0);
+        boost::shared_ptr<IOHandler> ioHanlder(new IOHandler(this, listenFD, i));
+        ioHandler_.push_back(ioHanlder);
+        if (i) {
+            boost::shared_ptr<Poco::Thread> thread(new Poco::Thread());
+            thread->start(*(ioHanlder.get()));
+        }
+    }
+    
+    ioHandler_[0]->run();
     // Initialize thread manager and run it
     // Wait for ioHandler finish
     // ioHandler_->join();
@@ -115,7 +126,8 @@ void Server::listenHandler(int fd, short what) {
 }
 
 IOHandler* Server::getIOHandler() {
-    return ioHandler_;
+    int selectedIOHandler = (++currentIOHandler_) % ioHandlerNum_;
+    return ioHandler_[selectedIOHandler].get();
 }
 
 ThreadManager* Server::getThreadManager() {
@@ -124,6 +136,14 @@ ThreadManager* Server::getThreadManager() {
 
 void Server::setWorkerNum(int workerNum) {
     workerNum_ = workerNum;
+}
+
+event_base* Server::getEventBase() {
+    return eventBase_;
+}
+
+void Server::setEventBase(event_base* eventBase) {
+    eventBase_ = eventBase;
 }
 
 Connection* Server::createConnection(int fd) {

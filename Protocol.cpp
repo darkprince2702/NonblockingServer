@@ -12,29 +12,29 @@ Operator* Protocol::processInput(const Message* inMessage) {
     nlohmann::json o = nlohmann::json::parse(output);
     Operator* result = new Operator();
     if (o.count("type")) {
-        result.type = o["type"];
+        result->type = o["type"];
     }
     if (o.count("key")) {
-        result.type = o["key"];
+        result->key = o["key"];
     }
     if (o.count("value")) {
-        result.type = o["value"];
+        result->value = o["value"];
     }
     return result;
 }
 
 Message* Protocol::processOutput(Operator* result) {
     nlohmann::json o;
-    if (result->type != NULL) {
+    if (!result->type.empty()) {
         o["type"] = result->type;
     } 
-    if (result->key != NULL) {
+    if (!result->key.empty()) {
         o["key"] = result->key;
     } 
-    if (result->value != NULL) {
+    if (!result->value.empty()) {
         o["value"] = result->value;
     } 
-    if (result->result != NULL) {
+    if (!result->result.empty()) {
         o["result"] = result->result;
     }
     std::string outMessage = o.dump();
@@ -48,8 +48,8 @@ Message* Protocol::processOutput(Operator* result) {
     // Write framing size and message
     memcpy(outputMessage, &outputSize, 4);
     memcpy(outputMessage + 4, uintArray, outputSize);
-    Message* result = new Message();
-    result->content = outputMessage;
-    result->size = outputSize + 4;
-    return result;
+    Message* return_ = new Message();
+    return_->content = outputMessage;
+    return_->size = outputSize + 4;
+    return return_;
 }

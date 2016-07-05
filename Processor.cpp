@@ -6,7 +6,6 @@
 
 #include "NonblockingServer.h"
 
-
 Processor::Processor(Connection* connection) {
     connection_ = connection;
     protocol_ = new Protocol();
@@ -17,20 +16,18 @@ void Processor::proccess() {
     Message inMessage;
     inMessage.content = connection_->getReadBuffer();
     inMessage.size = connection_->getMessageSize();
-    
+
     Operator* object = protocol_->processInput(&inMessage);
-    switch (object->type) {
-        case "set":
-            object->result = std::string(handler_->set(object->key, object->value));
-            return;
-        case "get":
-            object->result = std::string(handler_->get(object->key));
-            return;
-        case "remove":
-            object->result = std::string(handler_->remove(object->key));
-            return;
+    if (object->type == "set") {
+        object->result = std::to_string((int) handler_->set(object->key, object->value));
+    } else if (object->type == "get") {
+        object->result = handler_->get(object->key);
+    } else if (object->type == "remove") {
+        object->result = std::to_string((int) handler_->remove(object->key));
+    } else {
+        std::cout << "process() error\n";
     }
-    
+
     Message* outMessage = protocol_->processOutput(object);
     connection_->setwriteBuffer(outMessage->content);
     connection_->setwriteBufferSize(outMessage->size);

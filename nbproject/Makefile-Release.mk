@@ -35,8 +35,10 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/Client.o \
 	${OBJECTDIR}/Connection.o \
 	${OBJECTDIR}/DemoServer.o \
+	${OBJECTDIR}/Handler.o \
 	${OBJECTDIR}/IOHandler.o \
 	${OBJECTDIR}/Processor.o \
 	${OBJECTDIR}/Protocol.o \
@@ -69,6 +71,11 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/nonblockingserver: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/nonblockingserver ${OBJECTFILES} ${LDLIBSOPTIONS}
 
+${OBJECTDIR}/Client.o: Client.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Client.o Client.cpp
+
 ${OBJECTDIR}/Connection.o: Connection.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
@@ -78,6 +85,11 @@ ${OBJECTDIR}/DemoServer.o: DemoServer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DemoServer.o DemoServer.cpp
+
+${OBJECTDIR}/Handler.o: Handler.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Handler.o Handler.cpp
 
 ${OBJECTDIR}/IOHandler.o: IOHandler.cpp 
 	${MKDIR} -p ${OBJECTDIR}

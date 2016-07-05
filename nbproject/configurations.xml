@@ -4,10 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>Connection.h</itemPath>
-      <itemPath>IOHandler.h</itemPath>
       <itemPath>NonblockingServer.h</itemPath>
-      <itemPath>Server.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -16,8 +13,10 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>Client.cpp</itemPath>
       <itemPath>Connection.cpp</itemPath>
       <itemPath>DemoServer.cpp</itemPath>
+      <itemPath>Handler.cpp</itemPath>
       <itemPath>IOHandler.cpp</itemPath>
       <itemPath>Processor.cpp</itemPath>
       <itemPath>Protocol.cpp</itemPath>
@@ -56,15 +55,15 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
-      <item path="Connection.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Client.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Connection.h" ex="false" tool="3" flavor2="0">
+      <item path="Connection.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="DemoServer.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="IOHandler.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Handler.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="IOHandler.h" ex="false" tool="3" flavor2="0">
+      <item path="IOHandler.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="NonblockingServer.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -73,8 +72,6 @@
       <item path="Protocol.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Server.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="Server.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Task.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -101,15 +98,15 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
-      <item path="Connection.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Client.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="Connection.h" ex="false" tool="3" flavor2="0">
+      <item path="Connection.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="DemoServer.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="IOHandler.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Handler.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="IOHandler.h" ex="false" tool="3" flavor2="0">
+      <item path="IOHandler.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="NonblockingServer.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -118,8 +115,6 @@
       <item path="Protocol.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Server.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="Server.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Task.cpp" ex="false" tool="1" flavor2="0">
       </item>

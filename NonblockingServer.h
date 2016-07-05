@@ -68,12 +68,6 @@ struct Operator {
     std::string key;
     std::string value;
     std::string result;
-    Operator() {
-        type = NULL;
-        key = NULL;
-        value = NULL;
-        result = NULL;
-    }
 };
 
 class IOHandler;
@@ -87,13 +81,15 @@ class ThreadManager;
 class Server {
 public:
     Server();
-    Server(int port);
+    Server(int port, int ioHandlerNum, int workerNum);
     void createAndListenSocket();
     void serve();
     void stop();
     void listenHandler(evutil_socket_t fd, short what);
     IOHandler* getIOHandler();
     ThreadManager* getThreadManager();
+    event_base* getEventBase();
+    void setEventBase(event_base* eventBase);
     void setWorkerNum(int workerNum);
     void closeConnection(Connection* conn);
 private:
@@ -101,19 +97,22 @@ private:
     static const int STACK_SIZE = 100;
     int port_;
     int serverSocket_;
-    IOHandler *ioHandler_;
+    event_base* eventBase_;
+    std::vector<boost::shared_ptr<IOHandler>> ioHandler_;
     ThreadManager* threadManager_;
+    int ioHandlerNum_;
     int workerNum_;
+    int currentIOHandler_;
     std::stack<Connection*> stackConnections_;
     std::vector<Connection*> activeConnections_;
     std::mutex mutex;
     Connection* createConnection(int fd);
 };
 
-class IOHandler : Poco::Runnable {
+class IOHandler : public Poco::Runnable {
 public:
     IOHandler();
-    IOHandler(Server* server, int serverSocket);
+    IOHandler(Server* server, int serverSocket, int ID);
     void registerEvents();
     static void listenCallback(evutil_socket_t fd, short what, void *v);
     bool notify(Connection* conn);
@@ -125,6 +124,7 @@ public:
     int getNotificationRecvFD();
 private:
     Server* server_;
+    int ID_;
     event_base* eventBase_;
     event* listenEvent_;
     event* notificationEvent_;
@@ -233,7 +233,25 @@ public:
     static Handler* getInstance();
     bool set(std::string key, std::string value);
     std::string get(std::string key);
-    std::string remove(std::string key);
+    bool remove(std::string key);
 private:
-    std::unordered_map<std::string, std::string> data;
+    std::unordered_map<std::string, std::string> data_;
+    std::mutex mutex_;
+};
+
+class Client {
+public:
+    Client(int port);
+    ~Client();
+    void connect();
+    void disconnect();
+    void clientSend(Operator* o);
+    Operator* clientReceive();
+    bool set(std::string key, std::string value);
+    std::string get(std::string key);
+    bool remove(std::string key);
+private:
+    int port_;
+    int clientSocket_;
+    boost::shared_ptr<Protocol> protocol_;
 };
