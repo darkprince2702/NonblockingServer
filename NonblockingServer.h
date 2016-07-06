@@ -243,8 +243,8 @@ class Client {
 public:
     Client(int port);
     ~Client();
-    void connect();
-    void disconnect();
+    void clientConnect();
+    void clientDisconnect();
     void clientSend(Operator* o);
     Operator* clientReceive();
     bool set(std::string key, std::string value);

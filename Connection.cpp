@@ -37,22 +37,6 @@ void Connection::transition() {
     switch (connectionState_) {
         case CONN_RECV_FRAMING:
             if (messageSize_ > readBufferSize_) {
-                /*
-                if (readBufferSize_ == 0) {
-                    readBufferSize_ = 1;
-                }
-                uint32_t newSize = readBufferSize_;
-                while (messageSize_ > newSize) {
-                    newSize *= 2;
-                }
-                
-                uint8_t* newBuffer = (uint8_t*) std::realloc(readBuffer_, messageSize_);
-                if (newBuffer == NULL) {
-                    // nothing else to be done...
-                    throw std::bad_alloc();
-                }
-                readBuffer_ = newBuffer;
-                 */
                 delete readBuffer_;
                 uint8_t* newBuffer = new uint8_t[messageSize_];
                 readBuffer_ = newBuffer;
@@ -65,15 +49,13 @@ void Connection::transition() {
             socketState_ = SOCKET_RECV;
             connectionState_ = CONN_RECV;
             return;
-
         case CONN_RECV:
-            // Received message, give task to threadpool for processin
-//            processor_->proccess();
-//            connectionState_ = CONN_WAIT;
-//            notifyIOHanlder(); 
+            // Received message, give task to threadpool for processin 
             notifyThreadManager(new Task(this));
+//            processor_->proccess();
+//            setConnectionState(CONN_WAIT);
+//            notifyIOHanlder();
             return;
-
         case CONN_WAIT:
             if (writeBufferSize_ > 4) {
                 // Move into write state
@@ -86,8 +68,7 @@ void Connection::transition() {
             }
             return;
         case CONN_SEND:
-            // TODO: limit writeBufferSize_
-
+            // Turn back to init state
         case CONN_INIT:
             // Clear write buffer
             writeBuffer_ = NULL;
@@ -222,6 +203,7 @@ uint32_t Connection::getMessageSize() {
 
 void Connection::closeConnection() {
     event_del(&event_);
+    ioHandler_ = NULL;
     close(connectionSocket_);
 }
 
@@ -241,13 +223,12 @@ void Connection::setConnectionState(ConnectionState cs) {
     connectionState_ = cs;
 }
 
-
 bool Connection::notifyThreadManager(Task* task) {
     int fd = getThreadManager()->getTaskNotificationSendFD();
     if (fd < 0) {
         return false;
     }
-    
+
     fd_set wfds, efds;
     int ret = -1;
     int kSize = sizeof (task);
@@ -264,27 +245,22 @@ bool Connection::notifyThreadManager(Task* task) {
         } else if (ret == 0) {
             continue;
         }
-
         if (FD_ISSET(fd, &efds)) {
             close(fd);
             return false;
         }
-
         if (FD_ISSET(fd, &wfds)) {
             ret = send(fd, pos, kSize, 0);
             if (ret < 0) {
                 if (errno == EAGAIN) {
                     continue;
                 }
-
                 close(fd);
                 return false;
             }
-
             kSize -= ret;
             pos += ret;
         }
     }
-    
     return true;
 }

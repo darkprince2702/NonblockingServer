@@ -22,7 +22,6 @@
 #include <event2/util.h>
 #include <event2/event.h>
 #include <event2/event_compat.h>
-
 #include "NonblockingServer.h"
 
 #define PORT "5050"
@@ -32,6 +31,6 @@
  */
 
 int main(int argc, char** argv) {
-    Server* server = new Server(5050, 2, 4);
+    Server* server = new Server(5050, 1, 4);
     server->serve();
 }

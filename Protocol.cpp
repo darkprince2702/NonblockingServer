@@ -20,6 +20,9 @@ Operator* Protocol::processInput(const Message* inMessage) {
     if (o.count("value")) {
         result->value = o["value"];
     }
+    if (o.count("result")) {
+        result->result = o["result"];
+    }
     return result;
 }
 
