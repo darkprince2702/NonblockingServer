@@ -28,6 +28,7 @@ Connection::Connection(Server* server, int socket) {
 
 void Connection::init(int socket) {
     connectionSocket_ = socket;
+    ioHandler_ = server_->getIOHandler();
     eventFlags_ = 0;
     socketState_ = SOCKET_RECV;
     connectionState_ = CONN_INIT;
