@@ -7,15 +7,8 @@
 #include "NonblockingServer.h"
 
 Handler* Handler::getInstance() {
-    static Handler* instance = NULL;
-    static std::mutex mutex;
-    if (instance == NULL) {
-        std::lock_guard<std::mutex> guard(mutex);
-        if (instance == NULL) {
-            instance = new Handler();
-        }
-    }
-    return instance;
+    static Handler instance;
+    return &instance;
 }
 
 bool Handler::set(std::string key, std::string value) {
@@ -31,11 +24,6 @@ std::string Handler::get(std::string key) {
 
 bool Handler::remove(std::string key) {
     std::lock_guard<std::mutex> guard(mutex_);
-//    if (data_.erase(key)) {
-//        return true;
-//    } else {
-//        return false;
-//    }
     data_.erase(key);
     return true;
 }

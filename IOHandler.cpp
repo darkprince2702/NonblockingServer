@@ -24,17 +24,16 @@ IOHandler::IOHandler(Server* server, int serverSocket, int ID) {
 void IOHandler::registerEvents() {
     // Initialize event base
     // eventBase_ = server_->getEventBase();
-    
     if (eventBase_ == NULL) {
         eventBase_ = event_base_new();
     }
 
     if (listenSocket_ > 0) {
-//        event_set(&listenEvent_, listenSocket_, EV_READ|EV_PERSIST, IOHandler::listenCallback, server_);
+        //        event_set(&listenEvent_, listenSocket_, EV_READ|EV_PERSIST, IOHandler::listenCallback, server_);
         listenEvent_ = event_new(eventBase_, listenSocket_, EV_READ | EV_PERSIST,
                 IOHandler::listenCallback, server_);
         event_add(listenEvent_, 0);
-    } 
+    }
 
     createNotificationPipe();
 
@@ -54,7 +53,9 @@ void IOHandler::run() {
     if (eventBase_ == NULL) {
         registerEvents();
     }
+
     std::cout << "IOHandler " << ID_ << " entering loop...\n";
+
     event_base_loop(eventBase_, 0);
 }
 

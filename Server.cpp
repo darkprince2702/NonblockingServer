@@ -73,6 +73,7 @@ void Server::createAndListenSocket() {
 }
 
 void Server::serve() {
+    Poco::ThreadPool threadPool;
     if (!serverSocket_) {
         createAndListenSocket();
     }
@@ -82,11 +83,12 @@ void Server::serve() {
     // Initialize io handler and run it
     for (int i = 0; i < ioHandlerNum_; i++) {
         int listenFD = (i == 0 ? serverSocket_ : 0);
-        boost::shared_ptr<IOHandler> ioHanlder(new IOHandler(this, listenFD, i));
-        ioHandler_.push_back(ioHanlder);
-        if (i) {
-            boost::shared_ptr<Poco::Thread> thread(new Poco::Thread());
-            thread->start(*(ioHanlder.get()));
+        boost::shared_ptr<IOHandler> ioHandler(new IOHandler(this, listenFD, i));
+        ioHandler_.push_back(ioHandler);
+        if (i != 0) {
+//            boost::shared_ptr<Poco::Thread> thread(new Poco::Thread());
+//            thread->start(*(ioHanlder.get()));
+            threadPool.start(*(ioHandler.get()));
         }
     }
     

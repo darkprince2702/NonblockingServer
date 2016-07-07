@@ -36,6 +36,7 @@
 #include <event2/event_struct.h>
 #include <Poco/Runnable.h>
 #include <Poco/Thread.h>
+#include <Poco/ThreadPool.h>
 #include "json.hpp"
 
 enum SocketState {

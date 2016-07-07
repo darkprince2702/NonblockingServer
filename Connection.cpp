@@ -140,7 +140,7 @@ void Connection::workHandler(int fd, short what) {
             fetch = read(fd, &framing.buf[readBufferPos_],
                     (size_t) uint32_t(sizeof (framing.size) - readBufferPos_));
             if (fetch == 0) {
-                std::cout << "Connection close\n";
+//                std::cout << "Connection close\n";
                 server_->closeConnection(this);
                 return;
             }
