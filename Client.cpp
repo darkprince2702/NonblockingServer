@@ -81,7 +81,7 @@ Operator* Client::clientReceive() {
     // Read message;
     uint8_t* buffer = new uint8_t[framing.size]; // TODO: shared_ptr
     readSize = framing.size;
-    fetch = 0;
+    readPos = 0;
     while (readPos < readSize) {
         fetch = readSize - readPos;
         got = read(clientSocket_, buffer + readPos, fetch);

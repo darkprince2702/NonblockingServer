@@ -31,6 +31,6 @@
  */
 
 int main(int argc, char** argv) {
-    Server* server = new Server(5050, 1, 4);
+    Server* server = new Server(5050, 4, 4);
     server->serve();
 }

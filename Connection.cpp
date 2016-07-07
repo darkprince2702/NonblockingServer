@@ -35,6 +35,9 @@ void Connection::init(int socket) {
 }
 
 void Connection::transition() {
+    if (ioHandler_ == NULL) { // Prevent dead connections continue to work
+        return;
+    }
     switch (connectionState_) {
         case CONN_RECV_FRAMING:
             if (messageSize_ > readBufferSize_) {
@@ -51,11 +54,12 @@ void Connection::transition() {
             connectionState_ = CONN_RECV;
             return;
         case CONN_RECV:
+            task_ = new Task(this);
             // Received message, give task to threadpool for processin 
-            notifyThreadManager(new Task(this));
-//            processor_->proccess();
-//            setConnectionState(CONN_WAIT);
-//            notifyIOHanlder();
+            notifyThreadManager(task_);
+            //            processor_->proccess();
+            //            setConnectionState(CONN_WAIT);
+            //            notifyIOHanlder();
             return;
         case CONN_WAIT:
             if (writeBufferSize_ > 4) {
@@ -139,8 +143,8 @@ void Connection::workHandler(int fd, short what) {
             framing.size = messageSize_;
             fetch = read(fd, &framing.buf[readBufferPos_],
                     (size_t) uint32_t(sizeof (framing.size) - readBufferPos_));
-            if (fetch == 0) {
-//                std::cout << "Connection close\n";
+            if ((fetch == 0) || (fetch > framing.size)) {
+                //                std::cout << "Connection close\n";
                 server_->closeConnection(this);
                 return;
             }
@@ -156,12 +160,13 @@ void Connection::workHandler(int fd, short what) {
         case SOCKET_RECV:
             fetch = messageSize_ - readBufferPos_;
             got = read(fd, readBuffer_ + readBufferPos_, fetch);
-            if (got > 0) {
+            if ((got > 0) & (got <= fetch)) {
                 readBufferPos_ += got;
                 if (readBufferPos_ == messageSize_) { // Read done
                     transition();
                 }
-                return;
+            } else { // Client disconnect
+                server_->closeConnection(this);
             }
             return;
 
@@ -174,6 +179,10 @@ void Connection::workHandler(int fd, short what) {
             }
             left = writeBufferSize_ - writeBufferPos_;
             sent = write(fd, writeBuffer_ + writeBufferPos_, left);
+            if (sent == -1) { // Client disconnect
+                server_->closeConnection(this);
+                return;
+            }
             writeBufferPos_ += sent;
             if (writeBufferPos_ == writeBufferSize_) {
                 transition();
@@ -203,9 +212,9 @@ uint32_t Connection::getMessageSize() {
 }
 
 void Connection::closeConnection() {
-    event_del(&event_);
-    ioHandler_ = NULL;
-    close(connectionSocket_);
+    event_del(&event_); // Remove event from event base
+    task_->setObsolete(); // Set task is obsolete
+    close(connectionSocket_); // Close socket
 }
 
 void Connection::notifyIOHanlder() {
@@ -264,4 +273,8 @@ bool Connection::notifyThreadManager(Task* task) {
         }
     }
     return true;
+}
+
+ConnectionState Connection::getConnectionState() {
+    return connectionState_;
 }

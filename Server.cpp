@@ -83,17 +83,14 @@ void Server::serve() {
     // Initialize io handler and run it
     for (int i = 0; i < ioHandlerNum_; i++) {
         int listenFD = (i == 0 ? serverSocket_ : 0);
-        boost::shared_ptr<IOHandler> ioHandler(new IOHandler(this, listenFD, i));
+        IOHandler* ioHandler = new IOHandler(this, listenFD, i);
         ioHandler_.push_back(ioHandler);
         if (i != 0) {
-//            boost::shared_ptr<Poco::Thread> thread(new Poco::Thread());
-//            thread->start(*(ioHanlder.get()));
-            threadPool.start(*(ioHandler.get()));
+            threadPool.start(*ioHandler);
         }
     }
     
     ioHandler_[0]->run();
-    // Initialize thread manager and run it
     // Wait for ioHandler finish
     // ioHandler_->join();
 }
@@ -129,7 +126,7 @@ void Server::listenHandler(int fd, short what) {
 
 IOHandler* Server::getIOHandler() {
     int selectedIOHandler = (++currentIOHandler_) % ioHandlerNum_;
-    return ioHandler_[selectedIOHandler].get();
+    return ioHandler_[selectedIOHandler];
 }
 
 ThreadManager* Server::getThreadManager() {

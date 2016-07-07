@@ -142,12 +142,20 @@ void ThreadManager::eventHanlder() {
     if (taskQueue_.empty() || idleThreadIDs_.empty()) {
         return;
     } else {
-        Task* task = taskQueue_.front();
-        taskQueue_.pop();
-        int threadID = idleThreadIDs_.back();
-        idleThreadIDs_.pop_back();
-        task->setThreadID(threadID);
-        threads_[threadID].start(*task);
+        Task* task;
+        // Pop until get a non-obsolete task
+        do {
+            task = taskQueue_.front();
+            taskQueue_.pop();
+            if (!task->getIsObsolete()) {
+                int threadID = idleThreadIDs_.back();
+                idleThreadIDs_.pop_back();
+                task->setThreadID(threadID);
+                threads_[threadID].start(*task);
+                break;
+            }
+        } while (!taskQueue_.empty());
+        return;
     }
 }
 

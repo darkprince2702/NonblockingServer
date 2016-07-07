@@ -23,7 +23,6 @@ IOHandler::IOHandler(Server* server, int serverSocket, int ID) {
 
 void IOHandler::registerEvents() {
     // Initialize event base
-    // eventBase_ = server_->getEventBase();
     if (eventBase_ == NULL) {
         eventBase_ = event_base_new();
     }
@@ -32,7 +31,9 @@ void IOHandler::registerEvents() {
         //        event_set(&listenEvent_, listenSocket_, EV_READ|EV_PERSIST, IOHandler::listenCallback, server_);
         listenEvent_ = event_new(eventBase_, listenSocket_, EV_READ | EV_PERSIST,
                 IOHandler::listenCallback, server_);
-        event_add(listenEvent_, 0);
+        if (event_add(listenEvent_, 0) == -1) {
+            std::cout << "registerEvent error\n";
+        }
     }
 
     createNotificationPipe();
@@ -136,6 +137,7 @@ int IOHandler::getNotificationSendFD() {
 
 void IOHandler::notificationHandler(int fd, short what, void* v) {
     IOHandler* ioHandler = (IOHandler*) v;
+    assert(ioHandler != NULL);
     while (true) {
         Connection* connection = 0;
         const int kSize = sizeof (connection);
@@ -144,7 +146,10 @@ void IOHandler::notificationHandler(int fd, short what, void* v) {
             if (connection == NULL) {
                 return;
             }
-            connection->transition();
+            // Check if this connection is closed
+            if (connection->getConnectionState() == CONN_WAIT) {
+                connection->transition();
+            }
         } else if (nBytes > 0) {
             ioHandler->stop();
             return;

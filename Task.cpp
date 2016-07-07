@@ -8,6 +8,7 @@
 
 Task::Task(Connection* conn) {
     connection_ = conn;
+    isObsolete_ = false;
 }
 
 void Task::run() {
@@ -68,4 +69,14 @@ int Task::getThreadID() {
 
 void Task::setThreadID(int ID) {
     threadID_ = ID;
+}
+
+void Task::setObsolete() {
+    std::lock_guard<std::mutex> guard(mutex_);
+    isObsolete_ = true;
+}
+
+bool Task::getIsObsolete() {
+    std::lock_guard<std::mutex> guard(mutex_);
+    return isObsolete_;
 }

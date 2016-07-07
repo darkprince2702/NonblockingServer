@@ -99,7 +99,7 @@ private:
     int port_;
     int serverSocket_;
     event_base* eventBase_;
-    std::vector<boost::shared_ptr<IOHandler>> ioHandler_;
+    std::vector<IOHandler*> ioHandler_;
     ThreadManager* threadManager_;
     int ioHandlerNum_;
     int workerNum_;
@@ -154,6 +154,7 @@ public:
     void transition();
     uint8_t* getReadBuffer();
     uint32_t getMessageSize();
+    ConnectionState getConnectionState();
     void setwriteBuffer(uint8_t* content);
     void setwriteBufferSize(uint32_t size);
     void setConnectionState(ConnectionState cs);
@@ -177,6 +178,7 @@ private:
     uint32_t writeBufferPos_;
     uint32_t writeBufferSize_;
     Processor* processor_;
+    Task* task_;
     void setRead();
     void setWrite();
     void setIdle();
@@ -198,9 +200,13 @@ public:
     bool notify();
     void setThreadID(int ID);
     int getThreadID();
+    void setObsolete();
+    bool getIsObsolete();
 private:
     Connection* connection_;
     int threadID_;
+    bool isObsolete_;
+    std::mutex mutex_;
 };
 
 class ThreadManager : public Poco::Runnable {
