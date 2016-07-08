@@ -27,7 +27,7 @@ void IOHandler::registerEvents() {
         eventBase_ = event_base_new();
     }
 
-    if (listenSocket_ > 0) {
+    if (listenSocket_ >= 0) {
         //        event_set(&listenEvent_, listenSocket_, EV_READ|EV_PERSIST, IOHandler::listenCallback, server_);
         listenEvent_ = event_new(eventBase_, listenSocket_, EV_READ | EV_PERSIST,
                 IOHandler::listenCallback, server_);
@@ -85,6 +85,7 @@ void IOHandler::createNotificationPipe() {
 }
 
 bool IOHandler::notify(Connection* conn) {
+    std::lock_guard<std::mutex> guard(mutex);
     int fd = getNotificationSendFD();
     if (fd < 0) {
         return false;

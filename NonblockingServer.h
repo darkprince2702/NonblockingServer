@@ -104,6 +104,7 @@ private:
     int ioHandlerNum_;
     int workerNum_;
     int currentIOHandler_;
+    Poco::Thread* threadPool_;
     std::stack<Connection*> stackConnections_;
     std::vector<Connection*> activeConnections_;
     std::mutex mutex;
@@ -124,6 +125,7 @@ public:
     int getNotificationSendFD();
     int getNotificationRecvFD();
 private:
+    std::mutex mutex;
     Server* server_;
     int ID_;
     event_base* eventBase_;
@@ -166,7 +168,7 @@ private:
     int connectionSocket_;
     IOHandler* ioHandler_;
     Server* server_;
-    struct event event_;
+    struct event* event_;
     short eventFlags_;
     SocketState socketState_;
     ConnectionState connectionState_;

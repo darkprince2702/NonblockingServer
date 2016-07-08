@@ -32,6 +32,9 @@ void Connection::init(int socket) {
     eventFlags_ = 0;
     socketState_ = SOCKET_RECV;
     connectionState_ = CONN_INIT;
+    readBuffer_ = NULL;
+    readBufferSize_ = 0;
+    writeBufferSize_ = 0;
 }
 
 void Connection::transition() {
@@ -57,9 +60,6 @@ void Connection::transition() {
             task_ = new Task(this);
             // Received message, give task to threadpool for processin 
             notifyThreadManager(task_);
-            //            processor_->proccess();
-            //            setConnectionState(CONN_WAIT);
-            //            notifyIOHanlder();
             return;
         case CONN_WAIT:
             if (writeBufferSize_ > 4) {
@@ -115,15 +115,17 @@ void Connection::setFlags(short flags) {
     }
 
     if (eventFlags_ != 0) {
-        if (event_del(&event_) == -1) {
+        if (event_del(event_) == -1) {
             std::cout << "event_del() error\n";
             return;
         }
     }
     eventFlags_ = flags;
-    event_set(&event_, connectionSocket_, eventFlags_, Connection::workCallback, this);
-    event_base_set(ioHandler_->getEventBase(), &event_);
-    if (event_add(&event_, 0) == -1) {
+    //    event_set(&event_, connectionSocket_, eventFlags_, Connection::workCallback, this);
+    //    event_base_set(ioHandler_->getEventBase(), &event_);
+    event_ = event_new(ioHandler_->getEventBase(), connectionSocket_, eventFlags_,
+            Connection::workCallback, this);
+    if (event_add(event_, 0) == -1) {
         std::cout << "event_add() error\n";
         return;
     }
@@ -144,7 +146,6 @@ void Connection::workHandler(int fd, short what) {
             fetch = read(fd, &framing.buf[readBufferPos_],
                     (size_t) uint32_t(sizeof (framing.size) - readBufferPos_));
             if ((fetch == 0) || (fetch > framing.size)) {
-                //                std::cout << "Connection close\n";
                 server_->closeConnection(this);
                 return;
             }
@@ -212,7 +213,7 @@ uint32_t Connection::getMessageSize() {
 }
 
 void Connection::closeConnection() {
-    event_del(&event_); // Remove event from event base
+    event_del(event_); // Remove event from event base
     task_->setObsolete(); // Set task is obsolete
     close(connectionSocket_); // Close socket
 }
