@@ -50,8 +50,8 @@
         </ccTool>
         <linkerTool>
           <linkerLibItems>
-            <linkerOptionItem>`pkg-config --libs libevent`</linkerOptionItem>
             <linkerLibLibItem>PocoFoundation</linkerLibLibItem>
+            <linkerLibLibItem>event</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>

@@ -84,17 +84,20 @@ void Server::serve() {
     threadManagerThread.start(*threadManager_);
     // Initialize io handler and run it
     for (int i = 0; i < ioHandlerNum_; i++) {
-        int listenFD = (i == 0 ? serverSocket_ : -1);
+        int listenFD = (i == 0 ? serverSocket_ : 0);
         IOHandler* ioHandler = new IOHandler(this, listenFD, i);
         ioHandler_.push_back(ioHandler);
-        if (i != 0) {
+        if (i != 100) {
             threadPool_[i].start(*ioHandler);
         }
     }
     
-    ioHandler_[0]->run();
+//    ioHandler_[0]->run();
     // Wait for ioHandler finish
     // ioHandler_->join();
+    for (int i = 0; i < ioHandlerNum_; i++) {
+        threadPool_[i].join();
+    }
 }
 
 void Server::stop() {
@@ -150,8 +153,8 @@ void Server::setEventBase(event_base* eventBase) {
 Connection* Server::createConnection(int fd) {
     static int count = 0;
     std::lock_guard<std::mutex> guard(mutex);
-    count++;
-    std::cout << "Connections created: " << count << std::endl;
+//    count++;
+//    std::cout << "Connections created: " << count << std::endl;
     Connection* conn = NULL;
     if (stackConnections_.empty()) {
         conn = new Connection(this, fd);
@@ -174,7 +177,7 @@ void Server::closeConnection(Connection* conn) {
     static int count = 0;
     std::lock_guard<std::mutex> guard(mutex);
     count++;
-    for (int i = 1; i < ioHandlerNum_; i ++) {
+    for (int i = 0; i < ioHandlerNum_; i ++) {
         std::cout << "IO Handler number " << i << " still running: " << threadPool_[i].isRunning() << std::endl;
     }
     if (conn) {

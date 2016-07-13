@@ -119,7 +119,7 @@ public:
     static void listenCallback(evutil_socket_t fd, short what, void *v);
     bool notify(Connection* conn);
     static void notificationHandler(evutil_socket_t fd, short what, void *v);
-    void run();
+    void run() override;
     void stop();
     event_base* getEventBase();
     int getNotificationSendFD();
@@ -129,8 +129,8 @@ private:
     Server* server_;
     int ID_;
     event_base* eventBase_;
-    event* listenEvent_;
-    event* notificationEvent_;
+    event listenEvent_;
+    event notificationEvent_;
     int listenSocket_;
     int notificationPipeFDs_[2];
     void createNotificationPipe();

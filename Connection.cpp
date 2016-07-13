@@ -58,7 +58,7 @@ void Connection::transition() {
             return;
         case CONN_RECV:
             task_ = new Task(this);
-            // Received message, give task to threadpool for processin 
+            // Received message, give task to threadpool for processing 
             notifyThreadManager(task_);
             return;
         case CONN_WAIT:

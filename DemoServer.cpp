@@ -22,16 +22,15 @@
 #include <event2/util.h>
 #include <event2/event.h>
 #include <event2/event_compat.h>
-#include <thrift/transport/PlatformSocket.h>
 #include "NonblockingServer.h"
 
-#define PORT 5052
+#define PORT 5050
 
 /*
  * server.cpp - a demo socket server
  */
 
 int main(int argc, char** argv) {
-    Server* server = new Server(PORT, 4, 4);
+    Server* server = new Server(PORT, 2, 4);
     server->serve();
 }

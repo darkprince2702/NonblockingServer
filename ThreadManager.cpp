@@ -102,7 +102,7 @@ void ThreadManager::taskCallback(int fd, short what, void* v) {
             if (task == NULL) {
                 return;
             } else {
-                std::cout << "Task queue size: " << threadManger->taskQueue_.size() << std::endl;
+//                std::cout << "Task queue size: " << threadManger->taskQueue_.size() << std::endl;
                 threadManger->taskQueue_.push(task);
                 threadManger->eventHanlder();
             }

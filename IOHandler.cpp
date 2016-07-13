@@ -18,7 +18,7 @@ IOHandler::IOHandler(Server* server, int serverSocket, int ID) {
     listenSocket_ = serverSocket;
     ID_ = ID;
     eventBase_ = NULL;
-    notificationEvent_ = NULL;
+//    notificationEvent_ = NULL;
 }
 
 void IOHandler::registerEvents() {
@@ -28,20 +28,22 @@ void IOHandler::registerEvents() {
     }
 
     if (listenSocket_ >= 0) {
-        //        event_set(&listenEvent_, listenSocket_, EV_READ|EV_PERSIST, IOHandler::listenCallback, server_);
-        listenEvent_ = event_new(eventBase_, listenSocket_, EV_READ | EV_PERSIST,
-                IOHandler::listenCallback, server_);
-        if (event_add(listenEvent_, 0) == -1) {
+        event_set(&listenEvent_, listenSocket_, EV_READ | EV_PERSIST, IOHandler::listenCallback, server_);
+        event_base_set(eventBase_, &listenEvent_);
+        //        listenEvent_ = event_new(eventBase_, listenSocket_, EV_READ | EV_PERSIST,
+        //                IOHandler::listenCallback, server_);
+        if (event_add(&listenEvent_, 0) == -1) {
             std::cout << "registerEvent error\n";
         }
     }
 
     createNotificationPipe();
-
-
-    notificationEvent_ = event_new(eventBase_, getNotificationRecvFD(),
-            EV_READ | EV_PERSIST, IOHandler::notificationHandler, this);
-    if (event_add(notificationEvent_, 0) == -1) {
+    event_set(&notificationEvent_, getNotificationRecvFD(), EV_READ | EV_PERSIST, 
+            IOHandler::notificationHandler, this);
+    event_base_set(eventBase_, &notificationEvent_);
+//    notificationEvent_ = event_new(eventBase_, getNotificationRecvFD(),
+//            EV_READ | EV_PERSIST, IOHandler::notificationHandler, this);
+    if (event_add(&notificationEvent_, 0) == -1) {
         std::cout << "registerEvent error\n";
     }
 }
@@ -57,7 +59,13 @@ void IOHandler::run() {
 
     std::cout << "IOHandler " << ID_ << " entering loop...\n";
 
-    event_base_loop(eventBase_, 0);
+//    while (true) {
+        int ret = event_base_loop(eventBase_, 0);
+//        registerEvents();
+//        event_add(&notificationEvent_, 0);
+        std::cout << "event_base_loop return: " << ret << std::endl;
+        std::cout << "IO THREAD " << ID_ << " EXIT!!!!!!!!\n";
+//    }
 }
 
 event_base* IOHandler::getEventBase() {
@@ -85,6 +93,9 @@ void IOHandler::createNotificationPipe() {
 }
 
 bool IOHandler::notify(Connection* conn) {
+    if (ID_ != 0) {
+        std::cout << "notify start\n";
+    }
     std::lock_guard<std::mutex> guard(mutex);
     int fd = getNotificationSendFD();
     if (fd < 0) {
@@ -124,7 +135,9 @@ bool IOHandler::notify(Connection* conn) {
             pos += ret;
         }
     }
-
+    if (ID_ != 0) {
+        std::cout << "notify end\n";
+    }
     return true;
 }
 
@@ -139,23 +152,29 @@ int IOHandler::getNotificationSendFD() {
 void IOHandler::notificationHandler(int fd, short what, void* v) {
     IOHandler* ioHandler = (IOHandler*) v;
     assert(ioHandler != NULL);
+    if (ioHandler->ID_ != 0) {
+        std::cout << "notify handler start\n";
+    }
     while (true) {
         Connection* connection = 0;
         const int kSize = sizeof (connection);
         long nBytes = recv(fd, reinterpret_cast<void*> (&connection), kSize, 0);
         if (nBytes == kSize) {
             if (connection == NULL) {
+                std::cout << "notify a NULL connection\n";
                 return;
             }
             // Check if this connection is closed
             if (connection->getConnectionState() == CONN_WAIT) {
                 connection->transition();
+            } else {
+                std::cout << "notify a obsolete connection\n";
             }
         } else if (nBytes > 0) {
             ioHandler->stop();
             return;
         } else if (nBytes == 0) {
-            // Exit the loop
+            std::cout << "notification socket closed\n";
             break;
         } else {
             ioHandler->stop();
@@ -163,9 +182,13 @@ void IOHandler::notificationHandler(int fd, short what, void* v) {
         }
         break;
     }
+    if (ioHandler->ID_ != 0) {
+        std::cout << "notify handler end\n";
+    }
 }
 
 void IOHandler::stop() {
-    event_base_loopbreak(eventBase_);
+    std::cout << "notify error, IO handler break\n";
+    //    event_base_loopbreak(eventBase_);
     return;
 }
